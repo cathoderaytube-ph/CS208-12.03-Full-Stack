@@ -19,8 +19,13 @@ router.get('/', function(req, res, next){
 
 router.post('/create', function (req, res, next) {
     const { task } = req.body;
+
+    if(!task || task.trim() === '') {
+      return res.status(400).send('Task cannot be empty')
+    }
+
     try {
-      req.db.query('INSERT INTO todos (task) VALUES (?);', [task], (err, results) => {
+      req.db.query('INSERT INTO todos (task) VALUES (?);', [task.trim()], (err, results) => {
         if (err) {
           console.error('Error adding todo:', err);
           return res.status(500).send('Error adding todo');
@@ -35,8 +40,36 @@ router.post('/create', function (req, res, next) {
     }
 });
 
+/* POST update task (edit description & completion status) */
+router.post('/update', function (req, res, next) {
+    const { id, task, completed } = req.body;
+
+    if(!task || task.trim() === '') {
+      return res.status(400).send('Task cannot be empty')
+    }
+
+    // Checkbox sends 'on' when checked, undefined when unchecked
+    const isCompleted = completed === 'on' ? 1 : 0;
+
+    try {
+      req.db.query('UPDATE todos SET task = ?, completed = ? WHERE id = ?;', [task.trim(), isCompleted, id], (err, results) => {
+        if (err) {
+          console.error('Error updating todo:', err);
+          return res.status(500).send('Error updating todo');
+        }
+        console.log('Todo updated successfully:', results);
+        res.redirect('/');
+    });
+    }catch (error) {
+        console.error('Error updating todo:', error);
+        res.status(500).send('Error updating todo:');
+    }
+});
+
+/* POST delete task */
 router.post('/delete', function (req, res, next) {
     const { id } = req.body;
+
     try {
       req.db.query('DELETE FROM todos WHERE id = ?;', [id], (err, results) => {
         if (err) {
@@ -48,8 +81,8 @@ router.post('/delete', function (req, res, next) {
         res.redirect('/');
     });
     }catch (error) {
-        console.error('Error deleting todo:', error);
-        res.status(500).send('Error deleting todo:');
+        console.error('Error updating todo:', error);
+        res.status(500).send('Error updating todo:');
     }
 });
 

@@ -1,23 +1,33 @@
 extends layout
 
 block content
-  h1= title
-  p Welcome to #{title}
-  ol
-  each val in todos
-    li
-      span= val.task + ' - '
-      if val.completed > 0
-        span Completed
-      else
-        span Not Completed
-      form(method='POST' action='/delete')
-        input(type='hidden', name='id', value=val.id)
-        button(type='submit') Delete
+  .container 
+    .header.app-header 
+      h1= title
+      p Welcome to #{title}
 
-  hr
-  h2 Add a new task
-  form(method='POST' action='/create')
-    label(for='task') Task:
-    input(type='text', name='task', id='task', required)
-    button(type='submit') Create Task
+    .card.add-card 
+      h2 Add a New Task 
+      form(method='POST' action='/create' class='task-form')
+        .input-group 
+          input(type='text', name='task', id='task', placeholder='What needs to be done', required)
+          button.btn.btn-primary(type='submit') Create Task
+
+    .card.list-card 
+      h2 Your Tasks 
+      if todos.length === 0
+        p.empty-message No tasks found. Get started by adding one.
+      else
+        ul.todo-list 
+          each val in todos
+            li.todo-item(class=val.completed > 0 ? 'completed-item' : '')
+              form.update-form(method='POST' action='/update')
+                input(type='hidden', name='id', value=val.id)
+                input.task-edit-input(type='text', name='task', value=val.task, onchange='this.form.submit()', required)
+                label.checkbox-container
+                  input(type='checkbox', name='completed', checked=(val.completed > 0), onchange='this.form.submit()')
+                  span.checkmark Completed
+
+              form.delete-form(method='POST' action='/delete')
+                input(type='hidden', name='id', value=val.id)
+                button.btn.btn-delete(type='submit') Delete 
